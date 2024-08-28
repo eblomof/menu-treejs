@@ -1,0 +1,95 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>
+
+    </title>
+    <style>
+        /* Add smooth transitions for expanding/collapsing nodes */
+        .container {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .container.hidden {
+            opacity: 0;
+        }
+    </style>
+    <script src="dist/tree.min.js"></script>
+</head>
+
+<body>
+    <input type="text" id="search-box" placeholder="Search...">
+
+    <div class="container">
+    </div>
+</body>
+<script>
+
+
+    
+    // prettier-ignore
+    let originalData = [{ "id": "0", "text": "node-0", "children": [{ "id": "0-0", "text": "node-0-0", "children": [{ "id": "0-0-0", "text": "node-0-0-0" }, { "id": "0-0-1", "text": "node-0-0-1" }, { "id": "0-0-2", "text": "node-0-0-2" }] }, { "id": "0-1", "text": "node-0-1", "children": [{ "id": "0-1-0", "text": "node-0-1-0" }, { "id": "0-1-1", "text": "node-0-1-1" }, { "id": "0-1-2", "text": "node-0-1-2" }] }, { "id": "0-2", "text": "node-0-2", "children": [{ "id": "0-2-0", "text": "node-0-2-0" }, { "id": "0-2-1", "text": "node-0-2-1" }, { "id": "0-2-2", "text": "node-0-2-2" }] }] }, { "id": "1", "text": "node-1", "children": [{ "id": "1-0", "text": "node-1-0", "children": [{ "id": "1-0-0", "text": "node-1-0-0" }, { "id": "1-0-1", "text": "node-1-0-1" }, { "id": "1-0-2", "text": "node-1-0-2" }] }, { "id": "1-1", "text": "node-1-1", "children": [{ "id": "1-1-0", "text": "node-1-1-0" }, { "id": "1-1-1", "text": "node-1-1-1" }, { "id": "1-1-2", "text": "node-1-1-2" }] }, { "id": "1-2", "text": "node-1-2", "children": [{ "id": "1-2-0", "text": "node-1-2-0" }, { "id": "1-2-1", "text": "node-1-2-1" }, { "id": "1-2-2", "text": "node-1-2-2" }] }] }, { "id": "2", "text": "node-2", "children": [{ "id": "2-0", "text": "node-2-0", "children": [{ "id": "2-0-0", "text": "node-2-0-0" }, { "id": "2-0-1", "text": "node-2-0-1" }, { "id": "2-0-2", "text": "node-2-0-2" }] }, { "id": "2-1", "text": "node-2-1", "children": [{ "id": "2-1-0", "text": "node-2-1-0" }, { "id": "2-1-1", "text": "node-2-1-1" }, { "id": "2-1-2", "text": "node-2-1-2" }] }, { "id": "2-2", "text": "node-2-2", "children": [{ "id": "2-2-0", "text": "node-2-2-0" }, { "id": "2-2-1", "text": "node-2-2-1" }, { "id": "2-2-2", "text": "node-2-2-2" }] }] }]
+
+   
+    let tree = initializeTree(originalData);
+
+    // Debounce function to limit the rate at which the search function is invoked
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    // Handle input event with debounce
+    document.getElementById('search-box').addEventListener('input', debounce(function() {
+        const searchTerm = this.value.toLowerCase();
+        const filteredData = searchTerm ? filterTree(originalData, searchTerm) : originalData;
+
+        const container = document.querySelector('.container');
+        container.classList.add('hidden'); // Hide the tree container
+
+        setTimeout(() => {
+            // Reinitialize the tree with the filtered data
+            tree = initializeTree(filteredData);
+            container.classList.remove('hidden'); // Show the tree container
+        }, 300); // Match the delay with your CSS transition duration
+
+    }, 300));  // Delay of 300ms
+
+    function initializeTree(data) {
+        // Clear the tree container but keep the element (smoother transition)
+        document.querySelector('.container').innerHTML = '';  
+        return new Tree('.container', {
+            data: [{ id: '-1', text: 'root', children: data }],
+            closeDepth: 3,
+            loaded: function () {
+                this.collapseAll();  // Collapse all nodes when the tree is loaded
+            },
+            onChange: function () {
+                console.log(this.values);
+            }
+        });
+    }
+
+    function filterTree(nodes, searchTerm) {
+        return nodes
+            .map(node => {
+                if (node.text.toLowerCase().includes(searchTerm)) {
+                    return { ...node, children: filterTree(node.children || [], searchTerm) };
+                } else if (node.children) {
+                    const filteredChildren = filterTree(node.children, searchTerm);
+                    if (filteredChildren.length > 0) {
+                        return { ...node, children: filteredChildren };
+                    }
+                }
+                return null;
+            })
+            .filter(node => node !== null);
+    }
+</script>
+
+</html>
