@@ -47,6 +47,8 @@
             onChange: function () {
                 // Add newly selected nodes to the selectedItems Set
                 this.values.forEach(id => selectedItems.add(id));
+                
+                console.log('Selected nodes:', Array.from(this.values));
             }
         });
 
