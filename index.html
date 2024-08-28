@@ -45,23 +45,14 @@
                 this.collapseAll();  // Collapse all nodes when the tree is loaded
             },
             onChange: function () {
-                // Add newly selected nodes to the selectedItems Set
+                // Update selectedItems based on current selection
                 this.values.forEach(id => selectedItems.add(id));
 
                 // Print the array of currently selected node IDs
-                console.log('Selected nodes:', Array.from(this.values));
+                // console.log('Selected nodes:', Array.from(this.values));
 
-                // If there are selected items, disable all other leaf nodes
-                if (selectedItems.size > 0) {
-                    const allLeafNodes = Object.keys(this.leafNodesById); // Get all leaf node IDs
-                    const disables = allLeafNodes.filter(id => !selectedItems.has(id)); // Disable nodes not in selectedItems
-
-                    // Set disables to disable all nodes not selected
-                    this.disables = disables;
-                } else {
-                    // If no items are selected, enable all nodes
-                    this.disables = [];
-                }
+                // Update disables based on current selection
+                updateDisables(this);
             }
         });
 
@@ -78,10 +69,15 @@
         // Set the values to restore selections
         tree.values = selectedIds;
 
-        // If there are selected items, disable all other leaf nodes
-        if (selectedItems.size > 0) {
+        // Update disables based on current selection
+        updateDisables(tree);
+    }
+
+    function updateDisables(tree) {
+        console.log(tree.selectedNodes.length)
+        if (tree.selectedNodes.length > 0) {
             const allLeafNodes = Object.keys(tree.leafNodesById); // Get all leaf node IDs
-            const disables = allLeafNodes.filter(id => !selectedIds.includes(id)); // Disable nodes not in selectedItems
+            const disables = allLeafNodes.filter(id => !selectedItems.has(id)); // Disable nodes not in selectedItems
 
             // Set disables to disable all nodes not selected
             tree.disables = disables;
@@ -89,6 +85,7 @@
             // If no items are selected, enable all nodes
             tree.disables = [];
         }
+
     }
 
     document.getElementById('search-box').addEventListener('input', function () {
@@ -98,7 +95,7 @@
         // Re-initialize the tree with filtered data
         const tree = initializeTree(filteredData);
 
-        // Restore all selections, including both old and new ones
+        // Restore all selections and update disables
         restoreSelections(tree, selectedItems);
     });
 
@@ -115,6 +112,7 @@
             return acc;
         }, []);
     }
+
 
 
 
