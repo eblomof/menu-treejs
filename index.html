@@ -28,16 +28,26 @@
 <body>
     <input type="text" id="search-box" placeholder="Search...">
 
-    <div class="container">
-    </div>
+    <div class="container"></div>
 </body>
 <script>
+
+    let selectedItems = new Set(); // Store selected items
+
     let tree = initializeTree(originalData);
 
     document.getElementById('search-box').addEventListener('input', function () {
         const searchQuery = this.value.toLowerCase();
         const filteredData = searchTree(originalData, searchQuery);
+
+        // Validate and filter selected items
+        selectedItems = validateSelectedItems(filteredData, selectedItems);
+
+        // Re-initialize the tree with filtered data
         tree = initializeTree(filteredData);
+
+        // Restore selections
+        restoreSelections(tree, selectedItems);
     });
 
     function initializeTree(data) {
@@ -50,7 +60,8 @@
                 this.collapseAll();  // Collapse all nodes when the tree is loaded
             },
             onChange: function () {
-                console.log(this.values);
+                // Update selected items set
+                this.values.forEach(id => selectedItems.add(id));
             }
         });
     }
@@ -68,6 +79,37 @@
             return acc;
         }, []);
     }
+
+    function validateSelectedItems(data, selectedItems) {
+        const validItems = new Set();
+
+        function checkValidity(nodes) {
+            nodes.forEach(node => {
+                if (selectedItems.has(node.id)) {
+                    validItems.add(node.id);
+                }
+                if (node.children) {
+                    checkValidity(node.children);
+                }
+            });
+        }
+
+        checkValidity(data);
+
+        return validItems;
+    }
+
+    function restoreSelections(tree, selectedItems) {
+        // Convert selectedItems to an array of IDs
+        const selectedIds = Array.from(selectedItems);
+
+        // Set the values to restore selections
+        tree.values = selectedIds;
+
+        // Alternatively, if you need to directly manipulate selected nodes, you can get the selected nodes
+        const selectedNodes = tree.selectedNodes; // If needed, for reference or debugging
+    }
+
 </script>
 
 </html>
