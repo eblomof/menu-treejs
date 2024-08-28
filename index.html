@@ -32,39 +32,48 @@
 </body>
 <script>
 
-    let selectedItems = new Set(); // Store selected items
+    const selectedItems = new Set(); // Store selected items
 
     let tree = initializeTree(originalData);
 
-    document.getElementById('search-box').addEventListener('input', function () {
-        const searchQuery = this.value.toLowerCase();
-        const filteredData = searchTree(originalData, searchQuery);
-
-        // Validate and filter selected items
-        selectedItems = validateSelectedItems(filteredData, selectedItems);
-
-        // Re-initialize the tree with filtered data
-        tree = initializeTree(filteredData);
-
-        // Restore selections
-        restoreSelections(tree, selectedItems);
-    });
-
     function initializeTree(data) {
-        // Clear the tree container but keep the element (smoother transition)
         document.querySelector('.container').innerHTML = '';
-        return new Tree('.container', {
+        const tree = new Tree('.container', {
             data: [{ id: '-1', text: 'root', children: data }],
             closeDepth: 3,
             loaded: function () {
                 this.collapseAll();  // Collapse all nodes when the tree is loaded
             },
             onChange: function () {
-                // Update selected items set
+                // Add newly selected nodes to the selectedItems Set
                 this.values.forEach(id => selectedItems.add(id));
             }
         });
+
+        // Restore previously selected nodes
+        restoreSelections(tree, selectedItems);
+
+        return tree;
     }
+
+    function restoreSelections(tree, selectedItems) {
+        // Convert selectedItems to an array of IDs
+        const selectedIds = Array.from(selectedItems);
+
+        // Set the values to restore selections
+        tree.values = selectedIds;
+    }
+
+    document.getElementById('search-box').addEventListener('input', function () {
+        const searchQuery = this.value.toLowerCase();
+        const filteredData = searchTree(originalData, searchQuery);
+
+        // Re-initialize the tree with filtered data
+        const tree = initializeTree(filteredData);
+
+        // Restore all selections, including both old and new ones
+        restoreSelections(tree, selectedItems);
+    });
 
     function searchTree(data, query) {
         return data.reduce((acc, node) => {
@@ -80,35 +89,7 @@
         }, []);
     }
 
-    function validateSelectedItems(data, selectedItems) {
-        const validItems = new Set();
 
-        function checkValidity(nodes) {
-            nodes.forEach(node => {
-                if (selectedItems.has(node.id)) {
-                    validItems.add(node.id);
-                }
-                if (node.children) {
-                    checkValidity(node.children);
-                }
-            });
-        }
-
-        checkValidity(data);
-
-        return validItems;
-    }
-
-    function restoreSelections(tree, selectedItems) {
-        // Convert selectedItems to an array of IDs
-        const selectedIds = Array.from(selectedItems);
-
-        // Set the values to restore selections
-        tree.values = selectedIds;
-
-        // Alternatively, if you need to directly manipulate selected nodes, you can get the selected nodes
-        const selectedNodes = tree.selectedNodes; // If needed, for reference or debugging
-    }
 
 </script>
 
